@@ -1,4 +1,5 @@
-# @page-speed/hooks - README.md
+<img width="1200" height="630" alt="Page Speed React Hooks" src="https://github.com/user-attachments/assets/ffa6ff0c-6327-44d1-b420-7706f08edcb3" />
+
 
 <div align="center">
 
