@@ -19,7 +19,8 @@ export interface Metric {
     | "reload"
     | "back-forward"
     | "back-forward-cache"
-    | "prerender";
+    | "prerender"
+    | "restore";
 
   /** Unique ID for this metric instance */
   id: string;

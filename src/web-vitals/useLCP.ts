@@ -41,6 +41,7 @@ import type { LCPOptions, LCPState } from "./types";
  */
 export function useLCP(options: LCPOptions = {}) {
   const { threshold = 2500, reportAllChanges = false } = options;
+  const hasWarnedRef = useRef(false);
 
   const [state, setState] = useState<LCPState>({
     lcp: null,
@@ -81,6 +82,21 @@ export function useLCP(options: LCPOptions = {}) {
           isLoading: false,
         }));
 
+        // ✅ ADD THIS: Warn in dev if LCP exceeds threshold
+        if (
+          process.env.NODE_ENV === "development" &&
+          lcpValue > threshold &&
+          !hasWarnedRef.current
+        ) {
+          console.warn(
+            `[@page-speed/hooks] LCP (${lcpValue.toFixed(
+              0
+            )}ms) exceeds threshold (${threshold}ms). ` +
+              `Consider optimizing your LCP element. See: https://web.dev/lcp/`
+          );
+          hasWarnedRef.current = true;
+        }
+
         options.onMeasure?.(lcpValue, rating);
       },
       { reportAllChanges }
@@ -103,7 +119,7 @@ export function useLCP(options: LCPOptions = {}) {
     return () => {
       observerRef.current?.disconnect();
     };
-  }, [options, reportAllChanges, getRating]);
+  }, [options, reportAllChanges, getRating, threshold]);
 
   // Ref callback to attach to the element
   const ref = useCallback((node: HTMLElement | null) => {
