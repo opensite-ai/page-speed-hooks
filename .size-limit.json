@@ -6,25 +6,25 @@
   },
   {
     "name": "useWebVitals",
-    "path": "dist/web-vitals.mjs",
+    "path": "dist/index.mjs",
     "import": "{ useWebVitals }",
     "limit": "4 KB"
   },
   {
     "name": "useLCP",
-    "path": "dist/web-vitals.mjs",
+    "path": "dist/index.mjs",
     "import": "{ useLCP }",
     "limit": "3 KB"
   },
   {
     "name": "useOptimizedImage",
-    "path": "dist/media.mjs",
+    "path": "dist/index.mjs",
     "import": "{ useOptimizedImage }",
     "limit": "3 KB"
   },
   {
     "name": "useDeferredMount",
-    "path": "dist/resources.mjs",
+    "path": "dist/index.mjs",
     "import": "{ useDeferredMount }",
     "limit": "2 KB"
   }
