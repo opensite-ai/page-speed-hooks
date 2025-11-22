@@ -3,8 +3,6 @@
 ---
 
 # ⚡ @page-speed/hooks
-
-<div align="center">
   
 **Performance-optimized React hooks for Core Web Vitals, responsive images, lazy loading, and resource management.**
 
@@ -17,8 +15,6 @@ Drop-in implementations of [web.dev](https://web.dev) best practices with zero c
 [![Tree-Shakeable](https://img.shields.io/badge/Tree%20Shakeable-Yes-brightgreen?style=flat-square)](#tree-shaking)
 
 [Documentation](#documentation) · [Quick Start](#quick-start) · [Hooks](#hooks) · [Examples](#examples) · [Contributing](./CONTRIBUTING.md)
-
-</div>
 
 ---
 
