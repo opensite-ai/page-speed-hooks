@@ -4,8 +4,6 @@
 
 # ⚡ @page-speed/hooks
 
----
-
 <div align="center">
   
 **Performance-optimized React hooks for Core Web Vitals, responsive images, lazy loading, and resource management.**
