@@ -1,4 +1,4 @@
-<img width="1200" height="330" alt="page-speed-hooks-library" src="https://github.com/user-attachments/assets/1a0cdef2-06bc-47fb-a405-75de0e589c6f" />
+<img width="964" height="330" alt="page-speed-hooks" src="https://github.com/user-attachments/assets/b95a1cd4-a837-4cea-adea-9ce3da19adea" />
 
 ---
 
