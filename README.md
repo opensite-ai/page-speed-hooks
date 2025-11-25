@@ -1,4 +1,4 @@
-<img width="964" height="330" alt="page-speed-hooks" src="https://github.com/user-attachments/assets/b95a1cd4-a837-4cea-adea-9ce3da19adea" />
+![Page Speed React Hooks](https://github.com/user-attachments/assets/dadfdfb0-fe28-4e9c-9576-5c5213616d82)
 
 ---
 
