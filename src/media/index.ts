@@ -7,4 +7,6 @@ export { useOptimizedImage } from "./useOptimizedImage";
 export type {
   UseOptimizedImageOptions,
   UseOptimizedImageState,
+  SrcsetByFormat,
+  ImageFormat,
 } from "./useOptimizedImage";

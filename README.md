@@ -1025,7 +1025,13 @@ function INPOptimizer({ onReport }) {
 
 #### `useOptimizedImage(options)`
 
-Lazy loads images below the fold with IntersectionObserver, automatically deferring loading until the element is visible. Optionally integrates with **OptixFlow** for automatic image optimization including compression, format conversion, and responsive sizing.
+Lazy loads images below the fold with IntersectionObserver, automatically deferring loading until the element is visible. Optionally integrates with **OptixFlow** for automatic image optimization including compression, format conversion, responsive srcset generation, and DPR-aware sizing.
+
+Implements web.dev best practices for:
+- **Pixel-perfect sizing** for Lighthouse "Properly size images" audit
+- **DPR-aware srcset** with 1x and 2x variants
+- **Format negotiation** with AVIF, WebP, and JPEG fallback via `<picture>` element
+- **CLS prevention** through explicit dimensions
 
 ```tsx
 import { useOptimizedImage } from "@page-speed/hooks/media";
@@ -1052,33 +1058,41 @@ function ProductImage() {
 }
 ```
 
-**With OptixFlow Integration:**
+**With OptixFlow Integration (Recommended):**
+
+Use the `<picture>` element with responsive srcset for optimal Lighthouse scores:
 
 ```tsx
 import { useOptimizedImage } from "@page-speed/hooks/media";
 
 function OptimizedProductImage() {
-  const { ref, src, isLoaded, loading, size } = useOptimizedImage({
+  const { ref, src, srcset, sizes, isLoaded, loading, size } = useOptimizedImage({
     src: "https://example.com/product.jpg",
-    threshold: 0.1,
-    rootMargin: "50px",
+    width: 480,
+    height: 300,
     optixFlowConfig: {
       apiKey: "your-optixflow-api-key",
       compressionLevel: 80,
-      renderedFileType: "avif",
     },
   });
 
   return (
-    <img
-      ref={ref}
-      src={src} // Automatically optimized via OptixFlow CDN
-      loading={loading}
-      className={isLoaded ? "loaded" : "loading"}
-      alt="Product"
-      width={size.width}
-      height={size.height}
-    />
+    <picture>
+      {/* Modern formats with responsive srcset */}
+      <source srcSet={srcset.avif} sizes={sizes} type="image/avif" />
+      <source srcSet={srcset.webp} sizes={sizes} type="image/webp" />
+      {/* Fallback with pixel-perfect sizing for Lighthouse */}
+      <img
+        ref={ref}
+        src={src}
+        loading={loading}
+        className={isLoaded ? "loaded" : "loading"}
+        alt="Product"
+        width={size.width}
+        height={size.height}
+        decoding="async"
+      />
+    </picture>
   );
 }
 ```
@@ -1094,29 +1108,45 @@ function OptimizedProductImage() {
 - `optixFlowConfig?: object` - OptixFlow API configuration:
   - `apiKey: string` - Your OptixFlow API key (required to enable)
   - `compressionLevel?: number` - Quality 0-100 (default: 75)
-  - `renderedFileType?: 'avif' | 'webp' | 'jpeg' | 'png'` - Output format (default: 'avif')
+  - `renderedFileType?: 'avif' | 'webp' | 'jpeg' | 'png'` - Primary src format (default: 'jpeg')
 
 **Returns:**
 
 ```typescript
 {
-  ref: (node) => void           // Attach to img element
-  src: string                   // Image source (empty until loaded, optimized if OptixFlow enabled)
-  isLoaded: boolean             // Image has loaded
-  isInView: boolean             // Element is in viewport
-  loading: 'lazy' | 'eager'     // Loading strategy used
-  size: { width, height }       // Current rendered dimensions (dynamic)
+  ref: (node) => void              // Attach to img element
+  src: string                      // Primary src with exact rendered dimensions (Lighthouse-optimized)
+  srcset: {                        // Responsive srcset for each format
+    avif: string;                  // AVIF srcset with 1x and 2x DPR variants
+    webp: string;                  // WebP srcset with 1x and 2x DPR variants
+    jpeg: string;                  // JPEG srcset with 1x and 2x DPR variants
+  }
+  sizes: string                    // Sizes attribute value (e.g., "480px")
+  isLoaded: boolean                // Image has loaded
+  isInView: boolean                // Element is in viewport
+  loading: 'lazy' | 'eager'        // Loading strategy used
+  size: { width, height }          // Current rendered dimensions (dynamic)
 }
+```
+
+**Srcset Format:**
+
+Each format's srcset includes 1x and 2x DPR variants:
+
+```
+url?w=480&h=300&f=avif 1x, url?w=960&h=600&f=avif 2x
 ```
 
 **Best Practices:**
 
 - Use `eager={true}` for above-fold images (hero, header)
 - Use `eager={false}` (default) for below-fold images
+- Use the `<picture>` element with `srcset` for optimal format negotiation
+- Always include `width` and `height` to prevent CLS
 - Increase `rootMargin` to preload before user reaches image
 - Set `threshold` lower for early loading (0.01) or higher for exact visibility (0.5)
-- Use `optixFlowConfig` for automatic image optimization (compression, format conversion, sizing)
 - The `size` property updates dynamically via ResizeObserver as images resize
+- Use `decoding="async"` on the `<img>` for better performance
 
 ---
 
@@ -1402,6 +1432,8 @@ import type {
   // Media types
   UseOptimizedImageOptions,
   UseOptimizedImageState,
+  SrcsetByFormat,    // NEW: { avif: string, webp: string, jpeg: string }
+  ImageFormat,       // NEW: "avif" | "webp" | "jpeg" | "png"
   // Resource types
   UseDeferredMountOptions,
 } from "@page-speed/hooks";

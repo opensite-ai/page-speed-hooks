@@ -140,7 +140,7 @@ describe("useOptimizedImage", () => {
       expect(result.current.src).toContain("q=75");
     });
 
-    it("uses default renderedFileType of avif when not specified", () => {
+    it("uses default renderedFileType of jpeg for primary src when not specified", () => {
       const { result } = renderHook(() =>
         useOptimizedImage({
           src: "https://example.com/image.jpg",
@@ -153,7 +153,8 @@ describe("useOptimizedImage", () => {
         }),
       );
 
-      expect(result.current.src).toContain("f=avif");
+      // Primary src defaults to jpeg for broadest browser compatibility
+      expect(result.current.src).toContain("f=jpeg");
     });
 
     it("updates dynamicSrc when size changes", async () => {
@@ -222,6 +223,220 @@ describe("useOptimizedImage", () => {
           rootMargin: "100px",
         }),
       );
+    });
+  });
+
+  describe("srcset generation", () => {
+    it("returns empty srcset when not in view and not eager", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          width: 480,
+          height: 300,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+          },
+        }),
+      );
+
+      expect(result.current.srcset).toEqual({ avif: "", webp: "", jpeg: "" });
+    });
+
+    it("returns srcset object with avif, webp, and jpeg formats when eager", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          eager: true,
+          width: 480,
+          height: 300,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+          },
+        }),
+      );
+
+      expect(result.current.srcset.avif).toBeTruthy();
+      expect(result.current.srcset.webp).toBeTruthy();
+      expect(result.current.srcset.jpeg).toBeTruthy();
+    });
+
+    it("generates srcset with 1x and 2x DPR variants", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          eager: true,
+          width: 480,
+          height: 300,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+          },
+        }),
+      );
+
+      // Check avif srcset contains 1x and 2x variants
+      expect(result.current.srcset.avif).toContain("1x");
+      expect(result.current.srcset.avif).toContain("2x");
+
+      // Check that 1x variant has original dimensions
+      expect(result.current.srcset.avif).toContain("w=480");
+      expect(result.current.srcset.avif).toContain("h=300");
+
+      // Check that 2x variant has doubled dimensions
+      expect(result.current.srcset.avif).toContain("w=960");
+      expect(result.current.srcset.avif).toContain("h=600");
+    });
+
+    it("includes correct format parameter in each srcset", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          eager: true,
+          width: 100,
+          height: 100,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+          },
+        }),
+      );
+
+      expect(result.current.srcset.avif).toContain("f=avif");
+      expect(result.current.srcset.webp).toContain("f=webp");
+      expect(result.current.srcset.jpeg).toContain("f=jpeg");
+    });
+
+    it("returns empty srcset when OptixFlow is not configured", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          eager: true,
+          width: 480,
+          height: 300,
+        }),
+      );
+
+      expect(result.current.srcset).toEqual({ avif: "", webp: "", jpeg: "" });
+    });
+
+    it("returns empty srcset when dimensions are zero", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          eager: true,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+          },
+        }),
+      );
+
+      expect(result.current.srcset).toEqual({ avif: "", webp: "", jpeg: "" });
+    });
+  });
+
+  describe("sizes attribute", () => {
+    it("returns empty sizes when not in view and not eager", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          width: 480,
+          height: 300,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+          },
+        }),
+      );
+
+      expect(result.current.sizes).toBe("");
+    });
+
+    it("returns sizes attribute based on width when eager", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          eager: true,
+          width: 480,
+          height: 300,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+          },
+        }),
+      );
+
+      expect(result.current.sizes).toBe("480px");
+    });
+
+    it("updates sizes when dimensions change", async () => {
+      const { result, rerender } = renderHook(
+        ({ width, height }) =>
+          useOptimizedImage({
+            src: "https://example.com/image.jpg",
+            eager: true,
+            width,
+            height,
+            optixFlowConfig: {
+              apiKey: "test-api-key",
+            },
+          }),
+        { initialProps: { width: 480, height: 300 } },
+      );
+
+      expect(result.current.sizes).toBe("480px");
+
+      rerender({ width: 800, height: 600 });
+
+      await waitFor(() => {
+        expect(result.current.sizes).toBe("800px");
+      });
+    });
+
+    it("returns empty sizes when width is zero", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          eager: true,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+          },
+        }),
+      );
+
+      expect(result.current.sizes).toBe("");
+    });
+  });
+
+  describe("primary src (Lighthouse compliance)", () => {
+    it("uses exact rendered dimensions for primary src", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          eager: true,
+          width: 480,
+          height: 300,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+          },
+        }),
+      );
+
+      // Primary src should have exact dimensions (not scaled for DPR)
+      expect(result.current.src).toContain("w=480");
+      expect(result.current.src).toContain("h=300");
+    });
+
+    it("uses renderedFileType for primary src format", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          eager: true,
+          width: 480,
+          height: 300,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+            renderedFileType: "webp",
+          },
+        }),
+      );
+
+      expect(result.current.src).toContain("f=webp");
     });
   });
 });

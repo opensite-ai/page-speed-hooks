@@ -14,6 +14,112 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance benchmarking dashboard
 - Community contribution guidelines
 
+## [0.1.4] - 2025-12-01
+
+### Added
+
+#### `useOptimizedImage` - Responsive srcset and Lighthouse Optimization
+
+Enhanced the `useOptimizedImage` hook with comprehensive responsive image support implementing web.dev best practices for optimal Lighthouse scores.
+
+**Responsive srcset with Format Variants:**
+
+- New `srcset` property returns an object with AVIF, WebP, and JPEG srcset strings
+- Each format includes 1x and 2x DPR (Device Pixel Ratio) variants for high-density displays
+- Enables `<picture>` element usage for modern format negotiation (AVIF → WebP → JPEG fallback)
+
+**Pixel-Perfect Sizing for Lighthouse Compliance:**
+
+- Primary `src` now uses exact rendered dimensions (from `clientWidth`/`clientHeight`)
+- Addresses Lighthouse's "Properly size images" audit by serving exact-fit images
+- Uses `ResizeObserver` to dynamically update dimensions when layout changes
+
+**New `sizes` Attribute:**
+
+- New `sizes` property provides the sizes attribute value for responsive image selection
+- Defaults to the current rendered width in pixels (e.g., `"480px"`)
+
+**DPR-Aware srcset Generation:**
+
+- Generates 1x and 2x variants automatically: `url?w=480&h=300 1x, url?w=960&h=600 2x`
+- Ensures high-DPR devices receive appropriately sized images
+- Zero additional configuration required
+
+**Updated Return Type:**
+
+```typescript
+interface UseOptimizedImageState {
+  ref: (node: HTMLImageElement | null) => void;
+  src: string;                    // Primary src with exact rendered dimensions
+  srcset: SrcsetByFormat;         // NEW: { avif: string, webp: string, jpeg: string }
+  sizes: string;                  // NEW: Sizes attribute value (e.g., "480px")
+  isLoaded: boolean;
+  isInView: boolean;
+  loading: 'lazy' | 'eager';
+  size: { width: number; height: number };
+}
+
+interface SrcsetByFormat {
+  avif: string;   // "url?f=avif 1x, url?f=avif 2x"
+  webp: string;   // "url?f=webp 1x, url?f=webp 2x"
+  jpeg: string;   // "url?f=jpeg 1x, url?f=jpeg 2x"
+}
+```
+
+**Example Usage with `<picture>` Element:**
+
+```tsx
+import { useOptimizedImage } from '@page-speed/hooks/media';
+
+function ProductImage({ imageUrl, alt }) {
+  const { ref, src, srcset, sizes, isLoaded, loading, size } = useOptimizedImage({
+    src: imageUrl,
+    width: 480,
+    height: 300,
+    optixFlowConfig: {
+      apiKey: process.env.OPTIX_API_KEY,
+      compressionLevel: 80,
+    },
+  });
+
+  return (
+    <picture>
+      <source srcSet={srcset.avif} sizes={sizes} type="image/avif" />
+      <source srcSet={srcset.webp} sizes={sizes} type="image/webp" />
+      <img
+        ref={ref}
+        src={src}
+        alt={alt}
+        width={size.width}
+        height={size.height}
+        loading={loading}
+        decoding="async"
+        className={isLoaded ? 'loaded' : 'loading'}
+      />
+    </picture>
+  );
+}
+```
+
+**Lighthouse Performance Impact:**
+
+| Audit | Before | After |
+|-------|--------|-------|
+| Properly Size Images | ⚠️ May fail with single URL | ✅ Exact rendered dimensions |
+| Uses Modern Formats | ⚠️ Depends | ✅ AVIF + WebP layering |
+| LCP Optimization | ⚠️ Depends | ✅ Browser selects optimal format |
+
+**New Exports:**
+
+- `ImageFormat` - Type alias: `"avif" | "webp" | "jpeg" | "png"`
+- `SrcsetByFormat` - Interface for the srcset object structure
+
+**web.dev References:**
+
+- [Responsive Images](https://web.dev/articles/responsive-images)
+- [Properly Size Images](https://developer.chrome.com/docs/lighthouse/performance/uses-responsive-images)
+- [Serve Images in Modern Formats](https://developer.chrome.com/docs/lighthouse/performance/uses-webp-images)
+
 ## [0.1.3] - 2025-12-01
 
 ### Added

@@ -34,7 +34,12 @@ export type {
 
 // Media Optimization
 export { useOptimizedImage } from "./media";
-export type { UseOptimizedImageOptions, UseOptimizedImageState } from "./media";
+export type {
+  UseOptimizedImageOptions,
+  UseOptimizedImageState,
+  SrcsetByFormat,
+  ImageFormat,
+} from "./media";
 
 // Resource Management
 export { useDeferredMount } from "./resources";
