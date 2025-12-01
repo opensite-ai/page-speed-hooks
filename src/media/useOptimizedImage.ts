@@ -230,6 +230,7 @@ export function useOptimizedImage(
   const buildOptixFlowUrl = useCallback(
     (imgWidth: number, imgHeight: number, format: ImageFormat): string => {
       if (!useOptixFlow) return src;
+      if (!imgWidth || !imgHeight) return src;
 
       const params = new URLSearchParams();
       params.set("url", src);
@@ -269,7 +270,8 @@ export function useOptimizedImage(
    * This is the fallback src that Lighthouse audits against
    */
   const primarySrc = useMemo(() => {
-    if (!useOptixFlow) return src;
+    const hasDimensions = size.width > 0 && size.height > 0;
+    if (!useOptixFlow || !hasDimensions) return src;
     // Use the configured renderedFileType or default to jpeg for broadest compatibility
     const fallbackFormat = optixFlowConfig?.renderedFileType ?? "jpeg";
     return buildOptixFlowUrl(size.width, size.height, fallbackFormat);
