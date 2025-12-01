@@ -356,7 +356,7 @@ export function useOptimizedImage(
   return {
     ref,
     // Primary src uses exact rendered dimensions for Lighthouse "Properly size images" compliance
-    src: state.isInView || eager ? primarySrc : "",
+    src: state.isInView || eager ? primarySrc : src,
     // Srcset with format variants and DPR multipliers for <picture> element
     srcset: state.isInView || eager ? srcset : emptySrcset,
     // Sizes attribute for responsive image selection
