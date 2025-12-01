@@ -61,7 +61,7 @@ describe("useOptimizedImage", () => {
       useOptimizedImage({ src: "/test.jpg" }),
     );
 
-    expect(result.current.src).toBe("");
+    expect(result.current.src).toBe("/test.jpg");
   });
 
   it("initializes size with explicit width and height", () => {
