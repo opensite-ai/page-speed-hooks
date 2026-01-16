@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance benchmarking dashboard
 - Community contribution guidelines
 
+## [0.4.5] - 2026-01-15
+
+### Added
+
+#### `useOptimizedImage` OptixFlow object-fit control
+
+- Added `optixFlowConfig.objectFit` with `"cover" | "contain" | "fill"` options.
+- Sends `fit` query parameter to OptixFlow; default is `"cover"` when omitted.
+
 ## [0.1.4] - 2025-12-01
 
 ### Added

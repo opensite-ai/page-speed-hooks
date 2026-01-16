@@ -11,6 +11,7 @@ This folder contains media-related performance hooks. The primary hook is `useOp
 ## OptixFlow integration
 - Base URL: `https://octane.cdn.ing/api/v1/images/transform`.
 - Required query params: `url`, `w`, `h`, `q`, `f`, `apiKey`.
+- Optional query params: `fit` from `optixFlowConfig.objectFit` (default: `cover`).
 - Do not log or expose `optixFlowConfig.apiKey`.
 - If `optixFlowConfig` is absent, return the original `src` and empty `srcset`.
 
@@ -22,4 +23,3 @@ This folder contains media-related performance hooks. The primary hook is `useOp
 ## Testing
 - Tests should stub IntersectionObserver and ResizeObserver.
 - Validate OptixFlow URL generation and default compression/rendered file type behavior.
-

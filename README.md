@@ -1073,6 +1073,7 @@ function OptimizedProductImage() {
     optixFlowConfig: {
       apiKey: "your-optixflow-api-key",
       compressionLevel: 80,
+      objectFit: "cover",
     },
   });
 
@@ -1109,6 +1110,7 @@ function OptimizedProductImage() {
   - `apiKey: string` - Your OptixFlow API key (required to enable)
   - `compressionLevel?: number` - Quality 0-100 (default: 75)
   - `renderedFileType?: 'avif' | 'webp' | 'jpeg' | 'png'` - Primary src format (default: 'jpeg')
+  - `objectFit?: 'cover' | 'contain' | 'fill'` - Resize behavior (default: 'cover')
 
 **Returns:**
 

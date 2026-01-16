@@ -1,6 +1,6 @@
 {
   "name": "@page-speed/hooks",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Performance-optimized React hooks for Core Web Vitals, responsive images, lazy loading, and resource management. Drop-in implementations of web.dev best practices with zero configuration.",
   "keywords": [
     "react",
@@ -98,7 +98,7 @@
   "dependencies": {
     "web-vitals": "^5.1.0"
   },
-  "packageManager": "pnpm@10.24.0",
+  "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=9.0.0"

@@ -117,6 +117,7 @@ describe("useOptimizedImage", () => {
       expect(result.current.src).toContain(
         "url=https%3A%2F%2Fexample.com%2Fimage.jpg",
       );
+      expect(result.current.src).toContain("fit=cover");
       expect(result.current.src).toContain("w=420");
       expect(result.current.src).toContain("h=700");
       expect(result.current.src).toContain("q=85");
@@ -155,6 +156,23 @@ describe("useOptimizedImage", () => {
 
       // Primary src defaults to jpeg for broadest browser compatibility
       expect(result.current.src).toContain("f=jpeg");
+    });
+
+    it("uses objectFit when provided", () => {
+      const { result } = renderHook(() =>
+        useOptimizedImage({
+          src: "https://example.com/image.jpg",
+          eager: true,
+          width: 120,
+          height: 90,
+          optixFlowConfig: {
+            apiKey: "test-api-key",
+            objectFit: "contain",
+          },
+        }),
+      );
+
+      expect(result.current.src).toContain("fit=contain");
     });
 
     it("updates dynamicSrc when size changes", async () => {

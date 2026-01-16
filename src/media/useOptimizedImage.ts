@@ -36,6 +36,8 @@ export interface UseOptimizedImageOptions {
     apiKey: string;
     compressionLevel?: number;
     renderedFileType?: ImageFormat;
+    /** How the image should fit the target dimensions (default: "cover") */
+    objectFit?: "cover" | "contain" | "fill";
   };
 }
 
@@ -137,7 +139,7 @@ const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function useOptimizedImage(
-  options: UseOptimizedImageOptions,
+  options: UseOptimizedImageOptions
 ): UseOptimizedImageState {
   const {
     src,
@@ -179,7 +181,7 @@ export function useOptimizedImage(
       width: width ?? measuredSize.width,
       height: height ?? measuredSize.height,
     }),
-    [width, height, measuredSize.width, measuredSize.height],
+    [width, height, measuredSize.width, measuredSize.height]
   );
 
   // Detect and update size from the image element
@@ -195,8 +197,10 @@ export function useOptimizedImage(
 
       // Priority: explicit props > clientWidth/clientHeight (rendered) > naturalWidth/naturalHeight
       // clientWidth/clientHeight are the ACTUAL rendered dimensions that Lighthouse audits
-      const renderedWidth = width ?? (Math.round(img.clientWidth) || img.naturalWidth || 0);
-      const renderedHeight = height ?? (Math.round(img.clientHeight) || img.naturalHeight || 0);
+      const renderedWidth =
+        width ?? (Math.round(img.clientWidth) || img.naturalWidth || 0);
+      const renderedHeight =
+        height ?? (Math.round(img.clientHeight) || img.naturalHeight || 0);
 
       // Only update if we have valid dimensions and they've changed
       if (renderedWidth > 0 || renderedHeight > 0) {
@@ -245,6 +249,7 @@ export function useOptimizedImage(
 
       const params = new URLSearchParams();
       params.set("url", src);
+      params.set("fit", String(optixFlowConfig?.objectFit ?? "cover"));
       params.set("w", String(imgWidth));
       params.set("h", String(imgHeight));
       params.set("q", String(optixFlowConfig?.compressionLevel ?? 75));
@@ -253,7 +258,13 @@ export function useOptimizedImage(
 
       return `${BASE_URL}${params.toString()}`;
     },
-    [useOptixFlow, src, optixFlowConfig?.compressionLevel, optixFlowApiKey],
+    [
+      useOptixFlow,
+      src,
+      optixFlowConfig?.compressionLevel,
+      optixFlowApiKey,
+      optixFlowConfig?.objectFit,
+    ]
   );
 
   /**
@@ -273,7 +284,7 @@ export function useOptimizedImage(
         return `${url} ${dpr}x`;
       }).join(", ");
     },
-    [useOptixFlow, buildOptixFlowUrl],
+    [useOptixFlow, buildOptixFlowUrl]
   );
 
   /**
@@ -286,7 +297,16 @@ export function useOptimizedImage(
     // Use the configured renderedFileType or default to jpeg for broadest compatibility
     const fallbackFormat = optixFlowConfig?.renderedFileType ?? "jpeg";
     return buildOptixFlowUrl(size.width, size.height, fallbackFormat);
-  }, [useOptixFlow, src, size.width, size.height, optixFlowConfig?.renderedFileType, buildOptixFlowUrl]);
+  }, [
+    useOptixFlow,
+    src,
+    size.width,
+    size.height,
+    optixFlowConfig?.renderedFileType,
+    optixFlowConfig?.compressionLevel,
+    optixFlowConfig?.objectFit,
+    buildOptixFlowUrl,
+  ]);
 
   /**
    * Srcset object with format variants for <picture> element
@@ -328,7 +348,7 @@ export function useOptimizedImage(
           observerRef.current?.disconnect();
         }
       },
-      { threshold, rootMargin },
+      { threshold, rootMargin }
     );
 
     observerRef.current.observe(imgRef.current);
