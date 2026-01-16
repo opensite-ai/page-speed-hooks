@@ -57,16 +57,6 @@ import type {
  * ```
  */
 export function useINP(options: INPOptions = {}): INPState {
-  const {
-    threshold = 200,
-    reportAllChanges = false,
-    debug = process.env.NODE_ENV === "development",
-    detectIssues = true,
-    trackAttribution = true,
-    minInteractionLatency = 40,
-    longTaskThreshold = 50,
-  } = options;
-
   // Use refs to avoid stale closure issues
   const optionsRef = useRef(options);
   optionsRef.current = options;
@@ -148,6 +138,7 @@ export function useINP(options: INPOptions = {}): INPState {
   // Detect issue type based on interaction data
   const detectIssueType = useCallback(
     (interaction: INPInteraction): INPIssueType | null => {
+      const { threshold = 200, longTaskThreshold = 50 } = optionsRef.current;
       const { phases, scripts } = interaction;
 
       // Check for high input delay (main thread was busy)
@@ -170,7 +161,7 @@ export function useINP(options: INPOptions = {}): INPState {
 
       return null;
     },
-    [longTaskThreshold, threshold]
+    []
   );
 
   // Get suggestion for issue type
@@ -308,11 +299,21 @@ export function useINP(options: INPOptions = {}): INPState {
       return;
     }
 
+    let isMounted = true;
+    const { reportAllChanges = false } = optionsRef.current;
+
     // Use web-vitals library for accurate INP measurement
     onINP(
       (metric) => {
+        if (!isMounted) return;
         const inpValue = metric.value;
         const rating = getRating(inpValue);
+        const {
+          threshold = 200,
+          debug = process.env.NODE_ENV === "development",
+          detectIssues = true,
+          minInteractionLatency = 40,
+        } = optionsRef.current;
 
         // Process entries from the metric
         const metricEntries = metric.entries || [];
@@ -372,8 +373,8 @@ export function useINP(options: INPOptions = {}): INPState {
           }
 
           // Detect issues if enabled
-          if (detectIssues && interaction.latency > threshold) {
-            const issueType = detectIssueType(interaction);
+        if (detectIssues && interaction.latency > threshold) {
+          const issueType = detectIssueType(interaction);
             if (issueType) {
               const newIssue: INPIssue = {
                 type: issueType,
@@ -459,40 +460,38 @@ export function useINP(options: INPOptions = {}): INPState {
         }
 
         // Update state
-        setState({
-          inp: inpValue,
-          rating,
-          isLoading: false,
-          interactions: allInteractions,
-          slowestInteraction,
-          slowestPhases: slowestInteraction?.phases || null,
-          issues: issuesRef.current,
-          interactionCount,
-          slowInteractionCount,
-          averageLatency,
-          goodInteractionPercentage,
-          interactionsByType,
-          topSlowScripts: calculateTopSlowScripts(),
-        });
-
-        optionsRef.current.onMeasure?.(inpValue, rating);
+        if (isMounted) {
+          setState({
+            inp: inpValue,
+            rating,
+            isLoading: false,
+            interactions: allInteractions,
+            slowestInteraction,
+            slowestPhases: slowestInteraction?.phases || null,
+            issues: issuesRef.current,
+            interactionCount,
+            slowInteractionCount,
+            averageLatency,
+            goodInteractionPercentage,
+            interactionsByType,
+            topSlowScripts: calculateTopSlowScripts(),
+          });
+          optionsRef.current.onMeasure?.(inpValue, rating);
+        }
       },
       { reportAllChanges }
     );
 
     // No cleanup needed for onINP (web-vitals handles it)
+    return () => {
+      isMounted = false;
+    };
   }, [
-    reportAllChanges,
     getRating,
     getElementSelector,
     detectIssueType,
     getSuggestionForIssue,
     calculateTopSlowScripts,
-    detectIssues,
-    trackAttribution,
-    debug,
-    threshold,
-    minInteractionLatency,
   ]);
 
   // Memoize utils to prevent unnecessary re-renders
@@ -512,4 +511,3 @@ export function useINP(options: INPOptions = {}): INPState {
     utils,
   };
 }
-

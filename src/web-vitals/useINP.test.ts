@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useINP } from "./useINP";
+import type { INPOptions } from "./types";
 
 // Mock web-vitals
 vi.mock("web-vitals", () => ({
@@ -181,6 +182,41 @@ describe("useINP", () => {
         expect(result.current.rating).toBe("good");
         expect(result.current.isLoading).toBe(false);
       });
+    });
+
+    it("uses the latest onMeasure callback without re-registering", async () => {
+      const first = vi.fn();
+      const second = vi.fn();
+      const { rerender } = renderHook<
+        ReturnType<typeof useINP>,
+        { onMeasure: INPOptions["onMeasure"] }
+      >(
+        ({ onMeasure }) => useINP({ onMeasure }),
+        { initialProps: { onMeasure: first } }
+      );
+
+      const callback = mockOnINP.mock.calls[0][0];
+      rerender({ onMeasure: second });
+
+      const mockEntry = {
+        name: "click",
+        startTime: 100,
+        duration: 150,
+        processingStart: 110,
+        processingEnd: 200,
+        target: null,
+      };
+
+      act(() => {
+        callback({ value: 150, entries: [mockEntry] });
+      });
+
+      await waitFor(() => {
+        expect(first).not.toHaveBeenCalled();
+        expect(second).toHaveBeenCalledWith(150, "good");
+      });
+
+      expect(mockOnINP).toHaveBeenCalledTimes(1);
     });
 
     it("calculates correct rating for good INP", async () => {
@@ -487,5 +523,18 @@ describe("useINP", () => {
       });
     });
   });
-});
 
+  it("registers INP observer once per hook instance", () => {
+    const { rerender } = renderHook<
+      ReturnType<typeof useINP>,
+      { onMeasure: INPOptions["onMeasure"] }
+    >(
+      ({ onMeasure }) => useINP({ onMeasure }),
+      { initialProps: { onMeasure: vi.fn() } }
+    );
+
+    rerender({ onMeasure: vi.fn() });
+
+    expect(mockOnINP).toHaveBeenCalledTimes(1);
+  });
+});

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useCLS } from "./useCLS";
+import type { CLSOptions } from "./types";
 
 // Mock web-vitals
 vi.mock("web-vitals", () => ({
@@ -250,6 +251,46 @@ describe("useCLS", () => {
         expect(onMeasure).toHaveBeenCalledWith(0.05, "good");
       });
     });
+
+    it("uses the latest onMeasure callback without re-registering", async () => {
+      const first = vi.fn();
+      const second = vi.fn();
+      const { rerender } = renderHook<
+        ReturnType<typeof useCLS>,
+        { onMeasure: CLSOptions["onMeasure"] }
+      >(
+        ({ onMeasure }) => useCLS({ onMeasure }),
+        { initialProps: { onMeasure: first } }
+      );
+
+      const callback = mockOnCLS.mock.calls[0][0];
+      rerender({ onMeasure: second });
+
+      act(() => {
+        callback({ value: 0.05, entries: [] });
+      });
+
+      await waitFor(() => {
+        expect(first).not.toHaveBeenCalled();
+        expect(second).toHaveBeenCalledWith(0.05, "good");
+      });
+
+      expect(mockOnCLS).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("registers CLS observer once per hook instance", () => {
+    const { rerender } = renderHook<
+      ReturnType<typeof useCLS>,
+      { onMeasure: CLSOptions["onMeasure"] }
+    >(
+      ({ onMeasure }) => useCLS({ onMeasure }),
+      { initialProps: { onMeasure: vi.fn() } }
+    );
+
+    rerender({ onMeasure: vi.fn() });
+
+    expect(mockOnCLS).toHaveBeenCalledTimes(1);
   });
 
   describe("thresholds", () => {
@@ -414,4 +455,3 @@ describe("useCLS", () => {
     });
   });
 });
-

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { onCLS, onINP, onLCP, onFCP, onTTFB } from "web-vitals";
 import type { WebVitalsOptions, WebVitalsState } from "./types";
 
@@ -32,6 +32,9 @@ import type { WebVitalsOptions, WebVitalsState } from "./types";
  * ```
  */
 export function useWebVitals(options: WebVitalsOptions = {}): WebVitalsState {
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   const [vitals, setVitals] = useState<WebVitalsState>({
     lcp: null,
     cls: null,
@@ -47,14 +50,16 @@ export function useWebVitals(options: WebVitalsOptions = {}): WebVitalsState {
       return;
     }
 
-    const { reportAllChanges = false } = options;
+    let isMounted = true;
+    const { reportAllChanges = false } = optionsRef.current;
 
     // Track LCP (Largest Contentful Paint)
     // Target: < 2.5s (good), 2.5s-4.0s (needs improvement), > 4.0s (poor)
     onLCP(
       (metric) => {
+        if (!isMounted) return;
         setVitals((prev) => ({ ...prev, lcp: metric.value, isLoading: false }));
-        options.onLCP?.(metric);
+        optionsRef.current.onLCP?.(metric);
       },
       { reportAllChanges }
     );
@@ -63,8 +68,9 @@ export function useWebVitals(options: WebVitalsOptions = {}): WebVitalsState {
     // Target: < 0.1 (good), 0.1-0.25 (needs improvement), > 0.25 (poor)
     onCLS(
       (metric) => {
+        if (!isMounted) return;
         setVitals((prev) => ({ ...prev, cls: metric.value }));
-        options.onCLS?.(metric);
+        optionsRef.current.onCLS?.(metric);
       },
       { reportAllChanges }
     );
@@ -73,8 +79,9 @@ export function useWebVitals(options: WebVitalsOptions = {}): WebVitalsState {
     // Target: < 200ms (good), 200ms-500ms (needs improvement), > 500ms (poor)
     onINP(
       (metric) => {
+        if (!isMounted) return;
         setVitals((prev) => ({ ...prev, inp: metric.value }));
-        options.onINP?.(metric);
+        optionsRef.current.onINP?.(metric);
       },
       { reportAllChanges }
     );
@@ -83,8 +90,9 @@ export function useWebVitals(options: WebVitalsOptions = {}): WebVitalsState {
     // Target: < 1.8s (good), 1.8s-3.0s (needs improvement), > 3.0s (poor)
     onFCP(
       (metric) => {
+        if (!isMounted) return;
         setVitals((prev) => ({ ...prev, fcp: metric.value }));
-        options.onFCP?.(metric);
+        optionsRef.current.onFCP?.(metric);
       },
       { reportAllChanges }
     );
@@ -93,12 +101,16 @@ export function useWebVitals(options: WebVitalsOptions = {}): WebVitalsState {
     // Target: < 800ms (good), 800ms-1800ms (needs improvement), > 1800ms (poor)
     onTTFB(
       (metric) => {
+        if (!isMounted) return;
         setVitals((prev) => ({ ...prev, ttfb: metric.value }));
-        options.onTTFB?.(metric);
+        optionsRef.current.onTTFB?.(metric);
       },
       { reportAllChanges }
     );
-  }, [options]);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return vitals;
 }

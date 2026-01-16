@@ -64,13 +64,7 @@ import type {
  * ```
  */
 export function useCLS(options: CLSOptions = {}): CLSState {
-  const {
-    threshold = 0.1,
-    reportAllChanges = false,
-    debug = process.env.NODE_ENV === "development",
-    detectIssues = true,
-    trackAttribution = true,
-  } = options;
+  const trackAttribution = options.trackAttribution ?? true;
 
   // Use refs to avoid stale closure issues
   const optionsRef = useRef(options);
@@ -350,11 +344,19 @@ export function useCLS(options: CLSOptions = {}): CLSState {
       return;
     }
 
+    let isMounted = true;
+    const { reportAllChanges = false } = optionsRef.current;
+
     // Use web-vitals library for accurate CLS measurement
     onCLS(
       (metric) => {
         const clsValue = metric.value;
         const rating = getRating(clsValue);
+        const {
+          threshold = 0.1,
+          debug = process.env.NODE_ENV === "development",
+          detectIssues = true,
+        } = optionsRef.current;
 
         // Process entries from the metric
         const metricEntries: LayoutShiftEntry[] = metric.entries.map(
@@ -480,26 +482,41 @@ export function useCLS(options: CLSOptions = {}): CLSState {
         }
 
         // Update state
-        setState({
-          cls: clsValue,
-          rating,
-          isLoading: false,
-          entries: metricEntries,
-          largestShift,
-          sessionWindows: windows,
-          largestSessionWindow: largestWindow,
-          issues: issuesRef.current,
-          shiftCount: metricEntries.length,
-          hasPostInteractionShifts,
-        });
-
-        optionsRef.current.onMeasure?.(clsValue, rating);
+        if (isMounted) {
+          setState({
+            cls: clsValue,
+            rating,
+            isLoading: false,
+            entries: metricEntries,
+            largestShift,
+            sessionWindows: windows,
+            largestSessionWindow: largestWindow,
+            issues: issuesRef.current,
+            shiftCount: metricEntries.length,
+            hasPostInteractionShifts,
+          });
+          optionsRef.current.onMeasure?.(clsValue, rating);
+        }
       },
       { reportAllChanges }
     );
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    getRating,
+    getElementSelector,
+    detectIssueType,
+    getSuggestion,
+    buildSessionWindows,
+  ]);
 
-    // Additional PerformanceObserver for real-time shift detection
-    if (typeof PerformanceObserver !== "undefined" && trackAttribution) {
+  useEffect(() => {
+    if (typeof window === "undefined" || !trackAttribution) {
+      return;
+    }
+
+    if (typeof PerformanceObserver !== "undefined") {
       try {
         observerRef.current = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
@@ -556,18 +573,7 @@ export function useCLS(options: CLSOptions = {}): CLSState {
     return () => {
       observerRef.current?.disconnect();
     };
-  }, [
-    reportAllChanges,
-    getRating,
-    getElementSelector,
-    detectIssueType,
-    getSuggestion,
-    buildSessionWindows,
-    detectIssues,
-    trackAttribution,
-    debug,
-    threshold,
-  ]);
+  }, [trackAttribution, getElementSelector]);
 
   // Memoize utils to prevent unnecessary re-renders
   const utils = useMemo(

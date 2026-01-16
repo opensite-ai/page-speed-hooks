@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo, useEffect, useState, useCallback, useRef } from "react";
+import {
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 
 /** Supported image format types */
 export type ImageFormat = "avif" | "webp" | "jpeg" | "png";
@@ -126,6 +133,8 @@ const BASE_URL: string = "https://octane.cdn.ing/api/v1/images/transform?";
 
 /** DPR multipliers for srcset generation (1x for standard, 2x for high-density displays) */
 const DPR_MULTIPLIERS = [1, 2] as const;
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function useOptimizedImage(
   options: UseOptimizedImageOptions,
@@ -153,30 +162,32 @@ export function useOptimizedImage(
     isInView: false,
   });
 
-  // Size state for pixel-based width and height
-  const [size, setSize] = useState<{ width: number; height: number }>({
-    width: width ?? 0,
-    height: height ?? 0,
+  // Measured size state (derived size prefers explicit width/height props)
+  const [measuredSize, setMeasuredSize] = useState<{
+    width: number;
+    height: number;
+  }>({
+    width: 0,
+    height: 0,
   });
 
   const imgRef = useRef<HTMLImageElement | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // Update size when explicit width/height props change
-  useEffect(() => {
-    if (width !== undefined || height !== undefined) {
-      setSize((prev) => ({
-        width: width ?? prev.width,
-        height: height ?? prev.height,
-      }));
-    }
-  }, [width, height]);
+  const size = useMemo(
+    () => ({
+      width: width ?? measuredSize.width,
+      height: height ?? measuredSize.height,
+    }),
+    [width, height, measuredSize.width, measuredSize.height],
+  );
 
   // Detect and update size from the image element
   // CRITICAL: Use clientWidth/clientHeight (rendered dimensions) for Lighthouse compliance
   // Lighthouse audits the actual rendered size, not the intrinsic/natural dimensions
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!imgRef.current) return;
+    if (width !== undefined && height !== undefined) return;
 
     const calculateRenderedSize = () => {
       const img = imgRef.current;
@@ -188,8 +199,8 @@ export function useOptimizedImage(
       const renderedHeight = height ?? (Math.round(img.clientHeight) || img.naturalHeight || 0);
 
       // Only update if we have valid dimensions and they've changed
-      if ((renderedWidth > 0 || renderedHeight > 0)) {
-        setSize((prev) => {
+      if (renderedWidth > 0 || renderedHeight > 0) {
+        setMeasuredSize((prev) => {
           if (prev.width !== renderedWidth || prev.height !== renderedHeight) {
             return { width: renderedWidth, height: renderedHeight };
           }
@@ -221,7 +232,7 @@ export function useOptimizedImage(
       img.removeEventListener("load", calculateRenderedSize);
       resizeObserver?.disconnect();
     };
-  }, [width, height, state.isLoaded]);
+  }, [width, height]);
 
   /**
    * Build OptixFlow URL for specific dimensions and format

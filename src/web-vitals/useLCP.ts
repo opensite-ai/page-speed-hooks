@@ -40,7 +40,9 @@ import type { LCPOptions, LCPState } from "./types";
  * ```
  */
 export function useLCP(options: LCPOptions = {}) {
-  const { threshold = 2500, reportAllChanges = false } = options;
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   const hasWarnedRef = useRef(false);
 
   const [state, setState] = useState<LCPState>({
@@ -69,11 +71,16 @@ export function useLCP(options: LCPOptions = {}) {
       return;
     }
 
+    let isMounted = true;
+    const { reportAllChanges = false } = optionsRef.current;
+
     // Track LCP metric
     onLCP(
       (metric) => {
+        if (!isMounted) return;
         const lcpValue = metric.value;
         const rating = getRating(lcpValue);
+        const { threshold = 2500 } = optionsRef.current;
 
         setState((prev) => ({
           ...prev,
@@ -97,7 +104,7 @@ export function useLCP(options: LCPOptions = {}) {
           hasWarnedRef.current = true;
         }
 
-        options.onMeasure?.(lcpValue, rating);
+        optionsRef.current.onMeasure?.(lcpValue, rating);
       },
       { reportAllChanges }
     );
@@ -117,9 +124,10 @@ export function useLCP(options: LCPOptions = {}) {
     }
 
     return () => {
+      isMounted = false;
       observerRef.current?.disconnect();
     };
-  }, [options, reportAllChanges, getRating, threshold]);
+  }, [getRating]);
 
   // Ref callback to attach to the element
   const ref = useCallback((node: HTMLElement | null) => {
