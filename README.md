@@ -1,12 +1,8 @@
-![Page Speed React Hooks](https://octane.cdn.ing/api/v1/images/transform?url=https://toastability-production.s3.amazonaws.com/dp8tpp0wa3e0qge4damix7zuanjb&q=90)
-
----
-
 # ⚡ @page-speed/hooks
   
-**Performance-optimized React hooks for Core Web Vitals, responsive images, lazy loading, and resource management.**
+## Performance-optimized React hooks for Core Web Vitals, responsive images, lazy loading, and resource management. Drop-in implementations of [web.dev](https://web.dev) best practices with zero configuration, used extensively by the [OpenSite AI Platform](https://opensite.ai)
 
-Drop-in implementations of [web.dev](https://web.dev) best practices with zero configuration.
+![Page Speed React Hooks](https://octane.cdn.ing/api/v1/images/transform?url=https://toastability-production.s3.amazonaws.com/dp8tpp0wa3e0qge4damix7zuanjb&f=webp)
 
 [![npm version](https://img.shields.io/npm/v/@page-speed/hooks?style=flat-square)](https://www.npmjs.com/package/@page-speed/hooks)
 [![npm downloads](https://img.shields.io/npm/dm/@page-speed/hooks?style=flat-square)](https://www.npmjs.com/package/@page-speed/hooks)
