@@ -1,6 +1,6 @@
 {
   "name": "@page-speed/hooks",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Performance-optimized React hooks for Core Web Vitals, responsive images, lazy loading, and resource management. Drop-in implementations of web.dev best practices with zero configuration.",
   "keywords": [
     "react",
@@ -87,7 +87,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "glob": ">=10.5.0",
-    "happy-dom": "^15.11.7",
+    "happy-dom": "^20.8.8",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "size-limit": "^11.1.6",
