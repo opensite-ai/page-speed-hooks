@@ -93,7 +93,7 @@
     "size-limit": "^11.1.6",
     "tsup": "^8.5.1",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.5"
+    "vitest": "^4.1.0"
   },
   "dependencies": {
     "web-vitals": "^5.1.0"
